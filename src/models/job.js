@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const jobsTypes = require("../../constants/JobTypes");
+const jobsTypes = require("../constants/JobTypes");
 
 const jobSchema = new mongoose.Schema(
   {

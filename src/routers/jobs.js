@@ -1,5 +1,5 @@
 const express = require("express");
-const jobsTypes = require("../../constants/JobTypes");
+const jobsTypes = require("../constants/JobTypes");
 const jobAuth = require("../middleware/auth");
 const { uploadFileToS3 } = require("../middleware/s3-handlers");
 const Job = require("../models/job");
