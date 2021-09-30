@@ -1,19 +1,16 @@
 const express = require("express");
 const User = require("../models/user");
 const areNewUserDetailsValid = require("../middleware/userUpdateValidation");
+const { userAuth } = require("../middleware/auth");
+const { uploadFileToS3, } = require("../middleware/s3-handlers");
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  res.send("API is Working!");
-});
+const rootRoute = "/users/";
 
-router.get("/login", async (req, res) => {
+router.get(rootRoute + "get-user", async (req, res) => {
   try {
-    const user = await User.findByCredentials(
-      req.query.email,
-      req.query.password
-    );
+    const user = await User.findByCredentials(req.query.email, req.query.password);
 
     res.status(200).send({ user });
   } catch (err) {
@@ -32,7 +29,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-router.put("/users/modify", areNewUserDetailsValid, async (req, res) => {
+router.put(rootRoute + "modify", areNewUserDetailsValid, async (req, res) => {
   try {
     let user = await User.findByCredentials(req.body.email, req.body.password);
     for (const [key, value] of Object.entries(req.userDetails)) {
@@ -44,6 +41,27 @@ router.put("/users/modify", areNewUserDetailsValid, async (req, res) => {
   } catch (err) {
     res.status(400).send(err.message || err);
   }
+});
+
+router.post(rootRoute + "upload-avatar", userAuth, uploadFileToS3, async (req, res) => {
+    if (!req.file) {
+      return res.status(422).send({
+        status: 422,
+        message: "file not uploaded",
+      });
+    }
+
+    try {
+      const user = req.user;
+      if (!user) return res.status(400).send("Cannot find user");
+      user.avatarFileKey = req.file.key;
+      await user.save();
+
+      res.status(201).send(user.avatarFileKey);
+    } catch (err) {
+      console.log(err.message);
+      res.status(500).send(err);
+    }
 });
 
 module.exports = router;

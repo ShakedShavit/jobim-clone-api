@@ -1,15 +1,15 @@
 const express = require("express");
 const jobsTypes = require("../constants/JobTypes");
-const jobAuth = require("../middleware/auth");
+const { jobAuth } = require("../middleware/auth");
 const { uploadFileToS3 } = require("../middleware/s3-handlers");
 const Job = require("../models/job");
 const getGeocode = require("../utils/geocode");
 
 const router = express.Router();
 
-const routeStart = "/jobs/";
+const rootRoute = "/jobs/";
 
-router.post(routeStart + "publish", async (req, res) => {
+router.post(rootRoute + "publish", async (req, res) => {
   try {
     const locationData = await getGeocode(req.body.address);
 
@@ -27,11 +27,7 @@ router.post(routeStart + "publish", async (req, res) => {
   }
 });
 
-router.post(
-  routeStart + "upload-file",
-  jobAuth,
-  uploadFileToS3,
-  async (req, res) => {
+router.post(rootRoute + "upload-file", jobAuth, uploadFileToS3, async (req, res) => {
     if (!req.file) {
       return res.status(422).send({
         status: 422,
@@ -54,7 +50,7 @@ router.post(
 );
 
 // Get jobs based on company and types, and sorted by location
-router.get(routeStart, async (req, res) => {
+router.get(rootRoute, async (req, res) => {
   try {
     const apartmentsPollLimit = 5;
     const skipCounter = parseInt(req.query.skipCounter) || 0;
@@ -71,8 +67,7 @@ router.get(routeStart, async (req, res) => {
       $and: [
         !!company ? { companyName: company } : {},
         { type: { $in: [...types] } },
-        {
-          // Sort results by proximity to a given location
+        { // Sort results by proximity to a given location
           address: {
             $near: {
               $geometry: {

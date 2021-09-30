@@ -88,6 +88,10 @@ const userSchema = new mongoose.Schema(
           throw new Error(invalidYearOfBirthErrMsg);
       },
     },
+    avatarFileKey: {
+      type: String,
+      required: false,
+    },
     favoriteJobs: [
       {
         type: mongoose.Schema.Types.ObjectId,
